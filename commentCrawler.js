@@ -1,7 +1,7 @@
 
 var fs = require('graceful-fs');
 var file = 'log/hidden.html';
-fs.writeFile(file, '<link rel="stylesheet" href="stylesheet.css">');
+fs.writeFile(file, ' ');
 
 var io = require('socket.io')(80);
 var URI = require('urijs');
@@ -11,6 +11,30 @@ var urlExists = require('url-exists');
 var commentBuffer = [];
 var imageBuffer = [];
 var scriptBuffer = [];
+
+var fileBuffer;
+
+
+function ReadFromFileBuffer(_fileBuffer) {
+    scriptBuffer = [];
+    commentBuffer = [];
+    imageBuffer = [];
+
+    let comments = _fileBuffer.comments;
+    comments.forEach((comment) => {
+        commentBuffer.push(comment);
+    });
+
+    let images = _fileBuffer.images;
+    images.forEach((image) => {
+        imageBuffer.push(image);
+    });
+
+    let scripts = _fileBuffer.scripts;
+    scripts.forEach((script) => {
+        scriptBuffer.push(script);
+    })
+}
 
 
 
@@ -215,11 +239,14 @@ function deleteEmptyEntries(buffer) {
     if (buffer.length > 5000) {
         console.log("!!!!!!!!!!BUFFER OVERFLOW!!!!!!");
         buffer.pop();
+
     }
     return buffer;
 }
 
 //TODO: make three columns for script/image/text and scroll each of them seperately
+//if buffered data is used -> buffer data and check for multiples and create cleaned buffer
+
 
 
 var Crawler = require("js-crawler");
