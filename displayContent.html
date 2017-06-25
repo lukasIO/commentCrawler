@@ -1,0 +1,84 @@
+<html>
+
+<head></head>
+
+<body>
+    <div id="imagecontent">hello</div>
+    <div id="commentcontent">hello</div>
+    <div id="scriptcontent">hello</div>
+    <script src="./socket.io/socket.io.js"></script>
+    <script>
+        var socket = io('http://localhost');
+        socket.on('connect', function () { });
+
+        socket.on('disconnect', function () { });
+
+
+        socket.on('image', function (data) {
+            //console.log(data.imgsrc);
+
+            let el = document.createElement("div");
+
+            el.innerHTML = data.image;
+
+            let commentNodes = el.childNodes;
+
+
+            let allImgs = el.getElementsByTagName("IMG");
+            console.log(allImgs);
+
+            let imgurls = [];
+            for (var i = 0; i < allImgs.length; i++) {
+                console.log(allImgs[i].src)
+
+                socket.emit('imgurls', { url: allImgs[i].src });
+
+            }
+
+
+        });
+
+
+        socket.on('comment', function (data) {
+            //console.log(data.imgsrc);
+
+            let el = document.getElementById("commentcontent");
+            content = document.createElement("div");
+            content.innerText = data.comment;
+            var size = 60 / data.comment.length;
+            if (size < 1)
+                size = 1;
+
+            content.style.fontSize = size + "em";
+
+            el.append(content);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('script', function (data) {
+            //console.log(data.imgsrc);
+
+            let el = document.getElementById("scriptcontent");
+            el.innerText = data.script;
+            window.scrollTo(0, document.body.scrollHeight);
+
+        });
+
+        socket.on('imagefrombuffer', function (data) {
+            //console.log(data.imgsrc);
+
+            let el = document.getElementById("imagecontent");
+            let imgEl = document.createElement("img");
+            imgEl.src = data.url;
+            el.append(imgEl);
+            window.scrollTo(0, document.body.scrollHeight);
+
+        });
+    </script>
+
+
+</body>
+
+
+
+</html>
