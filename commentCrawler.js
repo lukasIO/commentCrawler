@@ -1,6 +1,6 @@
 
 var fs = require('graceful-fs');
-var file = 'log/hidden.html';
+var file = 'log/buffer.json';
 fs.writeFile(file, ' ');
 
 var io = require('socket.io')(80);
@@ -13,6 +13,12 @@ var imageBuffer = [];
 var scriptBuffer = [];
 
 var fileBuffer;
+
+var bufferObject = {
+    images: {},
+    comments: {},
+    scripts: {}
+}
 
 
 function ReadFromFileBuffer(_fileBuffer) {
@@ -43,8 +49,12 @@ io.on('connection', function (socket) {
 
     socket.on('imgurls', function (data) {
         console.log(data.url);
-        if (urlExists(data.url, function () {
-            imageBuffer.push(data.url);
+        if (urlExists(data.url, function (err, exists) {
+            if (exists) {
+                imageBuffer.push(data.url);
+                bufferObject.images[data.url] = true;
+            }
+
         }));
 
     });
@@ -85,17 +95,26 @@ function findHTMLElements(element, url) {
             else {
                 //io.emit('comment', { comment: comment });
                 scriptBuffer.push(comment);
-
+                //bufferObject.scripts.push(comment);
+                bufferObject.scripts[comment] = true;
             }
 
         }
 
     }
     else {
-        if (comment.startsWith('//') || comment.startsWith('/*'))
+        if (comment.startsWith('//') || comment.startsWith('/*')) {
             scriptBuffer.push(comment);
-        else
+
+            bufferObject.scripts[comment] = true;
+            //bufferObject.scripts.push(comment);
+        }
+        else {
             commentBuffer.push(comment);
+
+            bufferObject.comments[comment] = true;
+            //bufferObject.comments.push(comment);
+        }
     }
 }
 
@@ -168,13 +187,16 @@ function replaceContent(info) {
 
 
     }
+    if (scriptCommentArray != null) {
+        scriptCommentArray.forEach((comment) => {
+            if (comment != null)
+                findHTMLElements(comment, info.url);
 
-    scriptCommentArray.forEach((comment) => {
-        if (comment != null)
-            findHTMLElements(comment, info.url);
+
+        });
+    }
 
 
-    });
     //console.log(rawComments);
     //document.getElementsByTagName('html')[0].innerHTML = newHTML;
     //console.log(newHTML);
@@ -205,6 +227,13 @@ const sleep = function (ms) {
 
 
 function sendComments() {
+
+
+
+    if (bufferObject != null)
+        fs.writeFile(file, JSON.stringify(bufferObject));
+
+
     console.log("bufferlength: " + commentBuffer.length);
     let cleanedCommentBuffer = deleteEmptyEntries(commentBuffer);
     if (cleanedCommentBuffer.length > 0) {
@@ -229,6 +258,10 @@ function sendComments() {
 
 
 
+
+
+
+
 }
 
 function deleteEmptyEntries(buffer) {
@@ -246,12 +279,13 @@ function deleteEmptyEntries(buffer) {
 
 //TODO: make three columns for script/image/text and scroll each of them seperately
 //if buffered data is used -> buffer data and check for multiples and create cleaned buffer
+//check how to keep tabs in html tett for ascii drawings
 
 
 
 var Crawler = require("js-crawler");
 
-new Crawler().configure({ depth: 4, ignoreRelative: true, maxRequestsPerSecond: 0.2, maxConcurrentRequests: 1 })
+new Crawler().configure({ depth: 4, ignoreRelative: true, maxRequestsPerSecond: 20, maxConcurrentRequests: 10 })
     .crawl("http://www.maximiliankiepe.de/", function (content, url) { replaceContent(content, url) });
 
 let commentSender = setInterval(sendComments, 1500);
