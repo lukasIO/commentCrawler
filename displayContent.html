@@ -1,11 +1,30 @@
 <html>
 
-<head></head>
+<head>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* #commentcontent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }*/
+    </style>
+</head>
+
 
 <body>
-    <div id="imagecontent">hello</div>
+    <!--<div id="imagecontent"></div>-->
     <div id="commentcontent">hello</div>
-    <div id="scriptcontent">hello</div>
+
+    <!--<div id="scriptcontent"></div>-->
     <script src="./socket.io/socket.io.js"></script>
     <script>
         var socket = io('http://localhost');
@@ -15,7 +34,7 @@
 
 
         socket.on('image', function (data) {
-            //console.log(data.imgsrc);
+            console.log(data.image);
 
             let el = document.createElement("div");
 
@@ -25,11 +44,11 @@
 
 
             let allImgs = el.getElementsByTagName("IMG");
-            console.log(allImgs);
+            //console.log(allImgs);
 
             let imgurls = [];
             for (var i = 0; i < allImgs.length; i++) {
-                console.log(allImgs[i].src)
+                //console.log(allImgs[i].src)
 
                 socket.emit('imgurls', { url: allImgs[i].src });
 
@@ -45,15 +64,18 @@
             let el = document.getElementById("commentcontent");
             content = document.createElement("div");
             content.innerText = data.comment;
-            var size = 60 / data.comment.length;
+            var size = 40 / Math.pow(data.comment.length, 0.5);
             if (size < 1)
                 size = 1;
 
             content.style.fontSize = size + "em";
-            content.style.paddingLeft = Math.random() * 150;
-
-            el.append(content);
-            window.scrollTo(0, document.body.scrollHeight);
+            el.style.textAlign = "center";
+            el.style.verticalAlign = "center";
+            el.style.fontSize = size + "em";
+            //el.style.margin = "auto";
+            el.innerText = data.comment;
+            //el.append(content);
+            //window.scrollTo(0, document.body.scrollHeight);
         });
 
         socket.on('script', function (data) {
